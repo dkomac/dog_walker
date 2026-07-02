@@ -18,6 +18,9 @@ def build_provider(cfg: Config) -> Provider:
     if cfg.provider_name == "anthropic":
         from middlemanager.providers.anthropic import AnthropicProvider
         return AnthropicProvider(cfg.model, cfg.max_tokens)
+    if cfg.provider_name == "ollama":
+        from middlemanager.providers.ollama import OllamaProvider
+        return OllamaProvider(cfg.model)
     raise ValueError(f"Unknown provider: {cfg.provider_name}")
 
 

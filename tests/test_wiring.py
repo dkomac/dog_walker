@@ -25,3 +25,9 @@ def test_build_storage_unknown_raises():
 def test_build_provider_unknown_raises():
     with pytest.raises(ValueError):
         build_provider(_cfg(provider_name="openai"))
+
+
+def test_build_provider_ollama():
+    from middlemanager.providers.ollama import OllamaProvider
+    provider = build_provider(_cfg(provider_name="ollama", model="llama3.1:8b"))
+    assert isinstance(provider, OllamaProvider)

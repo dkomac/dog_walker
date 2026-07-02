@@ -3,7 +3,7 @@ name = "middlemanager"
 version = "0.1.0"
 description = "A slim LLM agent harness for learning."
 requires-python = ">=3.11"
-dependencies = ["anthropic>=0.40"]
+dependencies = ["anthropic>=0.40", "ollama>=0.4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

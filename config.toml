@@ -1,0 +1,15 @@
+[provider]
+name = "anthropic"
+model = "claude-haiku-4-5-20251001"
+max_tokens = 4096
+
+[harness]
+max_iterations = 20
+confirm_bash = true
+
+[tools]
+enabled = ["read_file", "write_file", "list_files", "run_bash"]
+
+[storage]
+backend = "sqlite"
+path = "data.db"

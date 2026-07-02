@@ -18,6 +18,12 @@ def test_assistant_with_tool_call_translation():
         {"function": {"name": "read_file", "arguments": {"path": "a"}}}]
 
 
+def test_system_message_translation():
+    # Ollama takes system as a normal role="system" message.
+    out = to_ollama_messages([Message(role="system", text="be good")])
+    assert out == [{"role": "system", "content": "be good"}]
+
+
 def test_tool_result_translation():
     # Ollama tool results are plain role="tool" messages, no tool_use_id wrapper.
     msg = Message(role="tool", tool_results=[ToolResult(tool_call_id="t1", content="hello")])

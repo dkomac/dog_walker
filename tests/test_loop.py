@@ -34,6 +34,17 @@ def test_runs_tool_then_finishes(tmp_path):
                for m in second_call_messages)
 
 
+def test_prepends_system_prompt(tmp_path):
+    provider = FakeProvider([Response(text="hi", tool_calls=[])])
+    reg = build_registry([], confirm_bash=False)
+    harness = Harness(provider, reg, _storage(tmp_path), max_iterations=5,
+                      system_prompt="BE A GOOD AGENT")
+    harness.run("hello")
+    first_message = provider.calls[0][0]
+    assert first_message.role == "system"
+    assert first_message.text == "BE A GOOD AGENT"
+
+
 def test_stops_at_max_iterations(tmp_path):
     # Provider always asks for another tool call -> never terminates on its own.
     looping = [Response(text=None, tool_calls=[ToolCall(id=f"t{i}", name="read_file",

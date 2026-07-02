@@ -1,5 +1,6 @@
 from types import SimpleNamespace
-from middlemanager.providers.anthropic import to_anthropic_messages, parse_anthropic_response
+from middlemanager.providers.anthropic import (
+    to_anthropic_messages, parse_anthropic_response, extract_system)
 from middlemanager.types import Message, ToolCall, ToolResult
 
 
@@ -23,6 +24,21 @@ def test_tool_result_translation():
     out = to_anthropic_messages([msg])[0]
     assert out == {"role": "user", "content": [
         {"type": "tool_result", "tool_use_id": "t1", "content": "hello"}]}
+
+
+def test_system_message_excluded_from_messages():
+    # Anthropic takes system as a separate param, so it must NOT appear in messages.
+    msgs = [Message(role="system", text="sys"), Message(role="user", text="hi")]
+    assert to_anthropic_messages(msgs) == [{"role": "user", "content": "hi"}]
+
+
+def test_extract_system_returns_system_text():
+    msgs = [Message(role="system", text="be good"), Message(role="user", text="hi")]
+    assert extract_system(msgs) == "be good"
+
+
+def test_extract_system_none_when_absent():
+    assert extract_system([Message(role="user", text="hi")]) is None
 
 
 def test_parse_response_with_text_and_tool_use():

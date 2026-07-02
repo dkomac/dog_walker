@@ -5,17 +5,34 @@ from middlemanager.tools.base import ToolRegistry
 from middlemanager.types import Message, ToolResult
 
 
+DEFAULT_SYSTEM_PROMPT = (
+    "You are an autonomous assistant running inside a command-line harness. "
+    "You have access to tools. When you need to read files, list directories, or run "
+    "shell commands, you MUST invoke the provided tools using the tool-calling "
+    "mechanism. Do NOT write a tool call as plain text or a code block, and never "
+    "invent or imagine tool output. Once the tools have given you what you need, reply "
+    "with a concise final answer in plain text and stop."
+)
+
+
 class Harness:
     def __init__(self, provider: Provider, registry: ToolRegistry,
-                 storage: Storage, max_iterations: int):
+                 storage: Storage, max_iterations: int,
+                 system_prompt: str = DEFAULT_SYSTEM_PROMPT):
         self.provider = provider
         self.registry = registry
         self.storage = storage
         self.max_iterations = max_iterations
+        self.system_prompt = system_prompt
 
     def run(self, user_input: str) -> str:
         session_id = self.storage.create_session()
         messages: list[Message] = []
+
+        if self.system_prompt:
+            system_msg = Message(role="system", text=self.system_prompt)
+            messages.append(system_msg)
+            self.storage.save_message(session_id, system_msg)
 
         user_msg = Message(role="user", text=user_input)
         messages.append(user_msg)

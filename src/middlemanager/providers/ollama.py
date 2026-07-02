@@ -7,7 +7,9 @@ from middlemanager.types import Message, ToolSpec, Response, ToolCall
 def to_ollama_messages(messages: list[Message]) -> list[dict]:
     out: list[dict] = []
     for m in messages:
-        if m.role == "user":
+        if m.role == "system":
+            out.append({"role": "system", "content": m.text or ""})
+        elif m.role == "user":
             out.append({"role": "user", "content": m.text or ""})
         elif m.role == "assistant":
             msg: dict = {"role": "assistant", "content": m.text or ""}

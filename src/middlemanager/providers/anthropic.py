@@ -24,6 +24,12 @@ def to_anthropic_messages(messages: list[Message]) -> list[dict]:
     return out
 
 
+def extract_system(messages: list[Message]) -> str | None:
+    # Anthropic takes the system prompt as a separate top-level param, not a message.
+    parts = [m.text for m in messages if m.role == "system" and m.text]
+    return "\n".join(parts) if parts else None
+
+
 def to_anthropic_tools(tools: list[ToolSpec]) -> list[dict]:
     return [{"name": t.name, "description": t.description,
              "input_schema": t.parameters} for t in tools]
@@ -48,10 +54,14 @@ class AnthropicProvider(Provider):
         self.client = Anthropic()  # reads ANTHROPIC_API_KEY
 
     def send(self, messages: list[Message], tools: list[ToolSpec]) -> Response:
-        resp = self.client.messages.create(
+        kwargs = dict(
             model=self.model,
             max_tokens=self.max_tokens,
             messages=to_anthropic_messages(messages),
             tools=to_anthropic_tools(tools),
         )
+        system = extract_system(messages)
+        if system:
+            kwargs["system"] = system
+        resp = self.client.messages.create(**kwargs)
         return parse_anthropic_response(resp.content)

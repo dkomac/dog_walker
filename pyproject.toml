@@ -1,5 +1,5 @@
 [project]
-name = "dog-walker"
+name = "dog_walker"
 version = "0.1.0"
 description = "A slim LLM agent harness for learning."
 requires-python = ">=3.11"
@@ -9,7 +9,7 @@ dependencies = ["anthropic>=0.40", "ollama>=0.4"]
 dev = ["pytest>=8"]
 
 [project.scripts]
-dog-walker = "dog_walker.main:main"
+dog_walker = "dog_walker.main:main"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -38,7 +38,7 @@ def main() -> None:
     else:
         prompt = sys.stdin.read().strip()
     if not prompt:
-        print("Usage: dog-walker <your prompt>")
+        print("Usage: dog_walker <your prompt>")
         return
     harness = build_harness(cfg)
     try:

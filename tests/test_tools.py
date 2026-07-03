@@ -1,5 +1,5 @@
-from middlemanager.tools.base import ToolRegistry, Tool
-from middlemanager.tools.builtin import ReadFile, WriteFile, ListFiles, build_registry
+from dog_walker.tools.base import ToolRegistry, Tool
+from dog_walker.tools.builtin import ReadFile, WriteFile, ListFiles, build_registry
 
 
 def test_read_file(tmp_path):

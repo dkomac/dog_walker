@@ -1,8 +1,8 @@
 from __future__ import annotations
 import json
 import sqlite3
-from middlemanager.storage.base import Storage
-from middlemanager.types import Message
+from dog_walker.storage.base import Storage
+from dog_walker.types import Message
 
 
 class SqliteStorage(Storage):

@@ -1,7 +1,7 @@
 import pytest
-from middlemanager.config import Config
-from middlemanager.main import build_storage, build_provider
-from middlemanager.storage.sqlite import SqliteStorage
+from dog_walker.config import Config
+from dog_walker.main import build_storage, build_provider
+from dog_walker.storage.sqlite import SqliteStorage
 
 
 def _cfg(**over):
@@ -28,6 +28,6 @@ def test_build_provider_unknown_raises():
 
 
 def test_build_provider_ollama():
-    from middlemanager.providers.ollama import OllamaProvider
+    from dog_walker.providers.ollama import OllamaProvider
     provider = build_provider(_cfg(provider_name="ollama", model="llama3.1:8b"))
     assert isinstance(provider, OllamaProvider)

@@ -1,8 +1,8 @@
-from middlemanager.loop import Harness
-from middlemanager.providers.fake import FakeProvider
-from middlemanager.storage.sqlite import SqliteStorage
-from middlemanager.tools.builtin import build_registry
-from middlemanager.types import Response, ToolCall
+from dog_walker.loop import Harness
+from dog_walker.providers.fake import FakeProvider
+from dog_walker.storage.sqlite import SqliteStorage
+from dog_walker.tools.builtin import build_registry
+from dog_walker.types import Response, ToolCall
 
 
 def _storage(tmp_path):

@@ -1,4 +1,4 @@
-from middlemanager.types import Message, ToolCall, ToolResult
+from dog_walker.types import Message, ToolCall, ToolResult
 
 
 def test_message_roundtrips_through_dict():

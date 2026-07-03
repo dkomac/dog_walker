@@ -1,5 +1,5 @@
-from middlemanager.storage.sqlite import SqliteStorage
-from middlemanager.types import Message, ToolCall
+from dog_walker.storage.sqlite import SqliteStorage
+from dog_walker.types import Message, ToolCall
 
 
 def test_save_and_load_roundtrip(tmp_path):

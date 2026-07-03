@@ -1,6 +1,6 @@
 from __future__ import annotations
-from middlemanager.providers.base import Provider
-from middlemanager.types import Message, ToolSpec, Response
+from dog_walker.providers.base import Provider
+from dog_walker.types import Message, ToolSpec, Response
 
 
 class FakeProvider(Provider):

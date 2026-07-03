@@ -1,11 +1,11 @@
 from __future__ import annotations
 import sys
-from middlemanager.config import Config, load_config
-from middlemanager.storage.base import Storage
-from middlemanager.storage.sqlite import SqliteStorage
-from middlemanager.providers.base import Provider
-from middlemanager.tools.builtin import build_registry
-from middlemanager.loop import Harness
+from dog_walker.config import Config, load_config
+from dog_walker.storage.base import Storage
+from dog_walker.storage.sqlite import SqliteStorage
+from dog_walker.providers.base import Provider
+from dog_walker.tools.builtin import build_registry
+from dog_walker.loop import Harness
 
 
 def build_storage(cfg: Config) -> Storage:
@@ -16,10 +16,10 @@ def build_storage(cfg: Config) -> Storage:
 
 def build_provider(cfg: Config) -> Provider:
     if cfg.provider_name == "anthropic":
-        from middlemanager.providers.anthropic import AnthropicProvider
+        from dog_walker.providers.anthropic import AnthropicProvider
         return AnthropicProvider(cfg.model, cfg.max_tokens)
     if cfg.provider_name == "ollama":
-        from middlemanager.providers.ollama import OllamaProvider
+        from dog_walker.providers.ollama import OllamaProvider
         return OllamaProvider(cfg.model)
     raise ValueError(f"Unknown provider: {cfg.provider_name}")
 
@@ -38,7 +38,7 @@ def main() -> None:
     else:
         prompt = sys.stdin.read().strip()
     if not prompt:
-        print("Usage: middlemanager <your prompt>")
+        print("Usage: dog-walker <your prompt>")
         return
     harness = build_harness(cfg)
     try:

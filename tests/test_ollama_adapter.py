@@ -1,6 +1,6 @@
 from types import SimpleNamespace
-from middlemanager.providers.ollama import to_ollama_messages, to_ollama_tools, parse_ollama_response
-from middlemanager.types import Message, ToolCall, ToolResult, ToolSpec
+from dog_walker.providers.ollama import to_ollama_messages, to_ollama_tools, parse_ollama_response
+from dog_walker.types import Message, ToolCall, ToolResult, ToolSpec
 
 
 def test_user_message_translation():

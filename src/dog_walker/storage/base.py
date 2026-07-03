@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from middlemanager.types import Message
+from dog_walker.types import Message
 
 
 class Storage(ABC):

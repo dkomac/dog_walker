@@ -1,4 +1,4 @@
-from middlemanager.config import load_config
+from dog_walker.config import load_config
 
 
 def test_load_config_reads_all_sections(tmp_path):

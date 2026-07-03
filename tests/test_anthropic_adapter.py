@@ -1,7 +1,7 @@
 from types import SimpleNamespace
-from middlemanager.providers.anthropic import (
+from dog_walker.providers.anthropic import (
     to_anthropic_messages, parse_anthropic_response, extract_system)
-from middlemanager.types import Message, ToolCall, ToolResult
+from dog_walker.types import Message, ToolCall, ToolResult
 
 
 def test_user_message_translation():

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from middlemanager.types import ToolSpec
+from dog_walker.types import ToolSpec
 
 
 class Tool(ABC):

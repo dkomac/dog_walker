@@ -1,8 +1,8 @@
 from __future__ import annotations
-from middlemanager.providers.base import Provider
-from middlemanager.storage.base import Storage
-from middlemanager.tools.base import ToolRegistry
-from middlemanager.types import Message, ToolResult
+from dog_walker.providers.base import Provider
+from dog_walker.storage.base import Storage
+from dog_walker.tools.base import ToolRegistry
+from dog_walker.types import Message, ToolResult
 
 
 DEFAULT_SYSTEM_PROMPT = (

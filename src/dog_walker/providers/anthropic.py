@@ -1,7 +1,7 @@
 from __future__ import annotations
 from anthropic import Anthropic
-from middlemanager.providers.base import Provider
-from middlemanager.types import Message, ToolSpec, Response, ToolCall
+from dog_walker.providers.base import Provider
+from dog_walker.types import Message, ToolSpec, Response, ToolCall
 
 
 def to_anthropic_messages(messages: list[Message]) -> list[dict]:

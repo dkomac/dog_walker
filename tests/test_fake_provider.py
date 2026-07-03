@@ -1,5 +1,5 @@
-from middlemanager.providers.fake import FakeProvider
-from middlemanager.types import Response, ToolCall, Message
+from dog_walker.providers.fake import FakeProvider
+from dog_walker.types import Response, ToolCall, Message
 
 
 def test_fake_returns_scripted_responses_in_order():

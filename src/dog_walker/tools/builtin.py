@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 import subprocess
-from middlemanager.tools.base import Tool, ToolRegistry
+from dog_walker.tools.base import Tool, ToolRegistry
 
 
 class ReadFile(Tool):

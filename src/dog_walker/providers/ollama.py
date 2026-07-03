@@ -1,7 +1,7 @@
 from __future__ import annotations
 import ollama
-from middlemanager.providers.base import Provider
-from middlemanager.types import Message, ToolSpec, Response, ToolCall
+from dog_walker.providers.base import Provider
+from dog_walker.types import Message, ToolSpec, Response, ToolCall
 
 
 def to_ollama_messages(messages: list[Message]) -> list[dict]:

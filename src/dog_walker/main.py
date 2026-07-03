@@ -1,11 +1,12 @@
 from __future__ import annotations
+import os
 import sys
 from dog_walker.config import Config, load_config
 from dog_walker.storage.base import Storage
 from dog_walker.storage.sqlite import SqliteStorage
 from dog_walker.providers.base import Provider
 from dog_walker.tools.builtin import build_registry
-from dog_walker.loop import Harness
+from dog_walker.loop import Harness, build_system_prompt
 
 
 def build_storage(cfg: Config) -> Storage:
@@ -28,7 +29,9 @@ def build_harness(cfg: Config) -> Harness:
     provider = build_provider(cfg)
     registry = build_registry(cfg.enabled_tools, cfg.confirm_bash)
     storage = build_storage(cfg)
-    return Harness(provider, registry, storage, cfg.max_iterations)
+    system_prompt = build_system_prompt(os.getcwd(), cfg.enabled_tools)
+    return Harness(provider, registry, storage, cfg.max_iterations,
+                   system_prompt=system_prompt)
 
 
 def main() -> None:

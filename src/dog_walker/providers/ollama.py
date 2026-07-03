@@ -45,8 +45,9 @@ def parse_ollama_response(message) -> Response:
 
 
 class OllamaProvider(Provider):
-    def __init__(self, model: str, host: str | None = None):
+    def __init__(self, model: str, host: str | None = None, temperature: float = 0.0):
         self.model = model
+        self.temperature = temperature
         self.client = ollama.Client(host=host) if host else ollama.Client()
 
     def send(self, messages: list[Message], tools: list[ToolSpec]) -> Response:
@@ -55,5 +56,6 @@ class OllamaProvider(Provider):
             messages=to_ollama_messages(messages),
             tools=to_ollama_tools(tools),
             stream=False,
+            options={"temperature": self.temperature},
         )
         return parse_ollama_response(resp.message)

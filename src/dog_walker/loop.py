@@ -15,6 +15,23 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 
 
+def build_system_prompt(cwd: str, tool_names: list[str]) -> str:
+    """Ground the model with its working directory and exact available tools."""
+    tools = ", ".join(tool_names) if tool_names else "(none)"
+    return (
+        "You are an autonomous assistant running inside a command-line harness.\n"
+        f"Your current working directory is: {cwd}\n"
+        f"You have exactly these tools: {tools}. There are no other tools; do not "
+        "invent tool names (there is no 'ls' tool — use 'list_files' or 'run_bash').\n"
+        "To act, you MUST invoke a tool through the tool-calling mechanism. NEVER write "
+        "a tool call as plain text or JSON in your reply, and never imagine tool output.\n"
+        'To refer to the current directory, use "." — do NOT guess absolute paths '
+        "like /home/user/project.\n"
+        "When you have what you need, reply with a concise final answer in plain text "
+        "and stop."
+    )
+
+
 class Harness:
     def __init__(self, provider: Provider, registry: ToolRegistry,
                  storage: Storage, max_iterations: int,

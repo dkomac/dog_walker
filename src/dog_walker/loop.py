@@ -1,8 +1,18 @@
 from __future__ import annotations
+import sys
 from dog_walker.providers.base import Provider
 from dog_walker.storage.base import Storage
 from dog_walker.tools.base import ToolRegistry
 from dog_walker.types import Message, ToolResult
+
+
+def _fmt_args(args: dict) -> str:
+    return ", ".join(f"{k}={v!r}" for k, v in args.items())
+
+
+def _truncate(text: str, limit: int = 300) -> str:
+    text = text.replace("\n", "\\n")
+    return text if len(text) <= limit else text[:limit] + "…"
 
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -35,12 +45,19 @@ def build_system_prompt(cwd: str, tool_names: list[str]) -> str:
 class Harness:
     def __init__(self, provider: Provider, registry: ToolRegistry,
                  storage: Storage, max_iterations: int,
-                 system_prompt: str = DEFAULT_SYSTEM_PROMPT):
+                 system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+                 verbose: bool = False):
         self.provider = provider
         self.registry = registry
         self.storage = storage
         self.max_iterations = max_iterations
         self.system_prompt = system_prompt
+        self.verbose = verbose
+
+    def _trace(self, msg: str) -> None:
+        # Traces go to stderr so the final answer stays clean on stdout.
+        if self.verbose:
+            print(msg, file=sys.stderr)
 
     def run(self, user_input: str) -> str:
         session_id = self.storage.create_session()
@@ -55,7 +72,8 @@ class Harness:
         messages.append(user_msg)
         self.storage.save_message(session_id, user_msg)
 
-        for _ in range(self.max_iterations):
+        for step in range(1, self.max_iterations + 1):
+            self._trace(f"\n── iteration {step} ──")
             response = self.provider.send(messages, self.registry.specs())
 
             assistant_msg = Message(role="assistant", text=response.text,
@@ -64,11 +82,14 @@ class Harness:
             self.storage.save_message(session_id, assistant_msg)
 
             if not response.tool_calls:
+                self._trace("💬 final answer (no tool calls) → stopping")
                 return response.text or ""
 
             results = []
             for call in response.tool_calls:
+                self._trace(f"→ tool call: {call.name}({_fmt_args(call.args)})")
                 output = self.registry.run(call.name, call.args)
+                self._trace(f"← result: {_truncate(output)}")
                 results.append(ToolResult(tool_call_id=call.id, content=output))
 
             tool_msg = Message(role="tool", tool_results=results)

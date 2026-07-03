@@ -25,25 +25,30 @@ def build_provider(cfg: Config) -> Provider:
     raise ValueError(f"Unknown provider: {cfg.provider_name}")
 
 
-def build_harness(cfg: Config) -> Harness:
+def build_harness(cfg: Config, verbose: bool = False) -> Harness:
     provider = build_provider(cfg)
     registry = build_registry(cfg.enabled_tools, cfg.confirm_bash)
     storage = build_storage(cfg)
     system_prompt = build_system_prompt(os.getcwd(), cfg.enabled_tools)
     return Harness(provider, registry, storage, cfg.max_iterations,
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, verbose=verbose)
 
 
 def main() -> None:
     cfg = load_config("config.toml")
-    if len(sys.argv) > 1:
-        prompt = " ".join(sys.argv[1:])
+    args = sys.argv[1:]
+    verbose = False
+    if "--verbose" in args or "-v" in args:
+        verbose = True
+        args = [a for a in args if a not in ("--verbose", "-v")]
+    if args:
+        prompt = " ".join(args)
     else:
         prompt = sys.stdin.read().strip()
     if not prompt:
-        print("Usage: dog_walker <your prompt>")
+        print("Usage: dog_walker [--verbose] <your prompt>")
         return
-    harness = build_harness(cfg)
+    harness = build_harness(cfg, verbose=verbose)
     try:
         result = harness.run(prompt)
     except Exception as e:

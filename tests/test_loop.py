@@ -45,6 +45,30 @@ def test_prepends_system_prompt(tmp_path):
     assert first_message.text == "BE A GOOD AGENT"
 
 
+def test_verbose_traces_calls_and_results(tmp_path, capsys):
+    f = tmp_path / "a.txt"
+    f.write_text("hello contents")
+    provider = FakeProvider([
+        Response(text=None, tool_calls=[ToolCall(id="t1", name="read_file",
+                                                 args={"path": str(f)})]),
+        Response(text="all done", tool_calls=[]),
+    ])
+    reg = build_registry(["read_file"], confirm_bash=False)
+    harness = Harness(provider, reg, _storage(tmp_path), max_iterations=5, verbose=True)
+    harness.run("go")
+    err = capsys.readouterr().err
+    assert "read_file" in err          # the call was traced
+    assert "hello contents" in err     # the result was traced
+
+
+def test_non_verbose_is_silent(tmp_path, capsys):
+    provider = FakeProvider([Response(text="done", tool_calls=[])])
+    reg = build_registry([], confirm_bash=False)
+    harness = Harness(provider, reg, _storage(tmp_path), max_iterations=5)
+    harness.run("go")
+    assert capsys.readouterr().err == ""
+
+
 def test_stops_at_max_iterations(tmp_path):
     # Provider always asks for another tool call -> never terminates on its own.
     looping = [Response(text=None, tool_calls=[ToolCall(id=f"t{i}", name="read_file",

@@ -1,4 +1,4 @@
-from dog_walker.loop import Harness
+from dog_walker.loop import Harness, build_system_prompt
 from dog_walker.providers.fake import FakeProvider
 from dog_walker.storage.sqlite import SqliteStorage
 from dog_walker.tools.builtin import build_registry
@@ -43,6 +43,17 @@ def test_prepends_system_prompt(tmp_path):
     first_message = provider.calls[0][0]
     assert first_message.role == "system"
     assert first_message.text == "BE A GOOD AGENT"
+
+
+def test_system_prompt_includes_preferences():
+    p = build_system_prompt("/tmp", ["read_file"], preferences="- be terse\n")
+    assert "be terse" in p
+    assert "User preferences" in p
+
+
+def test_system_prompt_without_preferences_omits_section():
+    p = build_system_prompt("/tmp", ["read_file"])
+    assert "User preferences" not in p
 
 
 def test_verbose_traces_calls_and_results(tmp_path, capsys):

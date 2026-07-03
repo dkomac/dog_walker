@@ -25,11 +25,19 @@ def build_provider(cfg: Config) -> Provider:
     raise ValueError(f"Unknown provider: {cfg.provider_name}")
 
 
+def _load_preferences(path: str) -> str:
+    if os.path.exists(path):
+        with open(path) as f:
+            return f.read()
+    return ""
+
+
 def build_harness(cfg: Config, verbose: bool = False) -> Harness:
     provider = build_provider(cfg)
-    registry = build_registry(cfg.enabled_tools, cfg.confirm_bash)
+    registry = build_registry(cfg.enabled_tools, cfg.confirm_bash, cfg.preferences_file)
     storage = build_storage(cfg)
-    system_prompt = build_system_prompt(os.getcwd(), cfg.enabled_tools)
+    preferences = _load_preferences(cfg.preferences_file)
+    system_prompt = build_system_prompt(os.getcwd(), cfg.enabled_tools, preferences)
     return Harness(provider, registry, storage, cfg.max_iterations,
                    system_prompt=system_prompt, verbose=verbose)
 

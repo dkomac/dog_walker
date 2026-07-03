@@ -38,3 +38,20 @@ def test_specs_expose_enabled_tools_only():
     reg = build_registry(["read_file", "write_file"], confirm_bash=False)
     names = {s.name for s in reg.specs()}
     assert names == {"read_file", "write_file"}
+
+
+def test_set_preference_appends(tmp_path):
+    from dog_walker.tools.builtin import SetPreference
+    pf = str(tmp_path / "prefs.md")
+    SetPreference(pf).run(text="be terse")
+    SetPreference(pf).run(text="use tabs")
+    content = open(pf).read()
+    assert "- be terse" in content
+    assert "- use tabs" in content
+
+
+def test_registry_includes_set_preference(tmp_path):
+    pf = str(tmp_path / "prefs.md")
+    reg = build_registry(["set_preference"], confirm_bash=False, preferences_file=pf)
+    reg.run("set_preference", {"text": "hello"})
+    assert "- hello" in open(pf).read()

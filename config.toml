@@ -8,8 +8,11 @@ max_iterations = 20
 confirm_bash = true
 
 [tools]
-enabled = ["read_file", "write_file", "list_files", "run_bash"]
+enabled = ["read_file", "write_file", "list_files", "run_bash", "set_preference"]
 
 [storage]
 backend = "sqlite"
 path = "data.db"
+
+[preferences]
+file = "preferences.md"

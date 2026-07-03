@@ -25,10 +25,10 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 
 
-def build_system_prompt(cwd: str, tool_names: list[str]) -> str:
-    """Ground the model with its working directory and exact available tools."""
+def build_system_prompt(cwd: str, tool_names: list[str], preferences: str = "") -> str:
+    """Ground the model with its working directory, tools, and user preferences."""
     tools = ", ".join(tool_names) if tool_names else "(none)"
-    return (
+    prompt = (
         "You are an autonomous assistant running inside a command-line harness.\n"
         f"Your current working directory is: {cwd}\n"
         f"You have exactly these tools: {tools}. There are no other tools; do not "
@@ -40,6 +40,9 @@ def build_system_prompt(cwd: str, tool_names: list[str]) -> str:
         "When you have what you need, reply with a concise final answer in plain text "
         "and stop."
     )
+    if preferences.strip():
+        prompt += "\n\nUser preferences (always follow these):\n" + preferences.strip()
+    return prompt
 
 
 class Harness:

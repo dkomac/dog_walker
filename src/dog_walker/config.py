@@ -13,6 +13,7 @@ class Config:
     enabled_tools: list[str]
     storage_backend: str
     storage_path: str
+    preferences_file: str = "preferences.md"
 
 
 def load_config(path: str) -> Config:
@@ -27,4 +28,5 @@ def load_config(path: str) -> Config:
         enabled_tools=data["tools"]["enabled"],
         storage_backend=data["storage"]["backend"],
         storage_path=data["storage"]["path"],
+        preferences_file=data.get("preferences", {}).get("file", "preferences.md"),
     )

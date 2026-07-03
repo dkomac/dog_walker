@@ -73,12 +73,36 @@ class RunBash(Tool):
         return (result.stdout or "") + (result.stderr or "")
 
 
-def build_registry(enabled: list[str], confirm_bash: bool) -> ToolRegistry:
+class SetPreference(Tool):
+    name = "set_preference"
+    description = (
+        "Save a lasting user preference (e.g. 'be terse', 'use tabs'). Preferences are "
+        "injected into your instructions on every future run. Use when the user states "
+        "a standing preference about how you should behave."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {"text": {"type": "string", "description": "The preference to remember."}},
+        "required": ["text"],
+    }
+
+    def __init__(self, preferences_file: str):
+        self.preferences_file = preferences_file
+
+    def run(self, text: str) -> str:
+        with open(self.preferences_file, "a") as f:
+            f.write(f"- {text}\n")
+        return f"Saved preference: {text}"
+
+
+def build_registry(enabled: list[str], confirm_bash: bool,
+                   preferences_file: str = "preferences.md") -> ToolRegistry:
     available = {
         "read_file": ReadFile(),
         "write_file": WriteFile(),
         "list_files": ListFiles(),
         "run_bash": RunBash(confirm=confirm_bash),
+        "set_preference": SetPreference(preferences_file),
     }
     reg = ToolRegistry()
     for name in enabled:

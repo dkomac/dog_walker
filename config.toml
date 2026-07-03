@@ -1,6 +1,6 @@
 [provider]
 name = "ollama"
-model = "llama3.1:8b"
+model = "qwen2.5:7b"
 max_tokens = 4096
 
 [harness]

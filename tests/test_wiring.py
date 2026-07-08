@@ -31,3 +31,19 @@ def test_build_provider_ollama():
     from dog_walker.providers.ollama import OllamaProvider
     provider = build_provider(_cfg(provider_name="ollama", model="llama3.1:8b"))
     assert isinstance(provider, OllamaProvider)
+
+
+def test_build_harness_passes_provider_and_model(tmp_path, monkeypatch):
+    from dog_walker.config import Config
+    from dog_walker import main as main_mod
+
+    cfg = Config(
+        provider_name="ollama", model="qwen2.5:7b", max_tokens=256,
+        max_iterations=5, confirm_bash=False, enabled_tools=["list_files"],
+        storage_backend="sqlite", storage_path=str(tmp_path / "d.db"),
+    )
+    # Avoid constructing a real Ollama client.
+    monkeypatch.setattr(main_mod, "build_provider", lambda c: object())
+    harness = main_mod.build_harness(cfg)
+    assert harness.provider_name == "ollama"
+    assert harness.model == "qwen2.5:7b"

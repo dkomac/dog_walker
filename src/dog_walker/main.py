@@ -39,6 +39,7 @@ def build_harness(cfg: Config, verbose: bool = False) -> Harness:
     preferences = _load_preferences(cfg.preferences_file)
     system_prompt = build_system_prompt(os.getcwd(), cfg.enabled_tools, preferences)
     return Harness(provider, registry, storage, cfg.max_iterations,
+                   provider_name=cfg.provider_name, model=cfg.model,
                    system_prompt=system_prompt, verbose=verbose)
 
 

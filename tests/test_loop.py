@@ -2,7 +2,7 @@ from dog_walker.loop import Harness, build_system_prompt
 from dog_walker.providers.fake import FakeProvider
 from dog_walker.storage.sqlite import SqliteStorage
 from dog_walker.tools.builtin import build_registry
-from dog_walker.types import Response, ToolCall
+from dog_walker.types import Response, ToolCall, Usage
 
 
 def _storage(tmp_path):
@@ -90,3 +90,92 @@ def test_stops_at_max_iterations(tmp_path):
     harness = Harness(provider, reg, _storage(tmp_path), max_iterations=3)
     result = harness.run("go")
     assert "max iterations" in result
+
+
+def test_records_success_run(tmp_path):
+    storage = _storage(tmp_path)
+    provider = FakeProvider([
+        Response(text="the answer", tool_calls=[], usage=Usage(input_tokens=8, output_tokens=2)),
+    ])
+    reg = build_registry(["list_files"], confirm_bash=False)
+    harness = Harness(provider, reg, storage, max_iterations=5,
+                      provider_name="fake", model="m")
+    harness.run("do it")
+    runs = storage.list_runs()
+    assert len(runs) == 1
+    r = runs[0]
+    assert r.outcome == "success"
+    assert r.prompt == "do it"
+    assert r.final_answer == "the answer"
+    assert r.iterations == 1
+    assert r.tool_calls == 0
+    assert r.input_tokens == 8 and r.output_tokens == 2
+    assert r.provider == "fake" and r.model == "m"
+    assert r.latency_ms >= 0
+
+
+def test_records_tokens_summed_and_tools_collected(tmp_path):
+    storage = _storage(tmp_path)
+    provider = FakeProvider([
+        Response(text=None,
+                 tool_calls=[ToolCall(id="c0", name="list_files", args={"path": "."})],
+                 usage=Usage(input_tokens=5, output_tokens=1)),
+        Response(text="done", tool_calls=[], usage=Usage(input_tokens=6, output_tokens=3)),
+    ])
+    reg = build_registry(["list_files"], confirm_bash=False)
+    harness = Harness(provider, reg, storage, max_iterations=5,
+                      provider_name="fake", model="m")
+    harness.run("list")
+    r = storage.list_runs()[0]
+    assert r.outcome == "success"
+    assert r.iterations == 2
+    assert r.tool_calls == 1
+    assert r.tools_used == ["list_files"]
+    assert r.input_tokens == 11 and r.output_tokens == 4
+
+
+def test_records_max_iterations(tmp_path):
+    storage = _storage(tmp_path)
+    looping = [
+        Response(text=None,
+                 tool_calls=[ToolCall(id="c0", name="list_files", args={"path": "."})])
+        for _ in range(10)
+    ]
+    provider = FakeProvider(looping)
+    reg = build_registry(["list_files"], confirm_bash=False)
+    harness = Harness(provider, reg, storage, max_iterations=3,
+                      provider_name="fake", model="m")
+    harness.run("loop forever")
+    r = storage.list_runs()[0]
+    assert r.outcome == "max_iterations"
+    assert r.iterations == 3
+
+
+def test_no_usage_reported_stores_null_tokens(tmp_path):
+    storage = _storage(tmp_path)
+    provider = FakeProvider([Response(text="hi", tool_calls=[])])
+    reg = build_registry(["list_files"], confirm_bash=False)
+    harness = Harness(provider, reg, storage, max_iterations=5,
+                      provider_name="fake", model="m")
+    harness.run("hi")
+    r = storage.list_runs()[0]
+    assert r.input_tokens is None and r.output_tokens is None
+
+
+def test_records_error_and_reraises(tmp_path):
+    import pytest
+
+    class BoomProvider:
+        model = "m"
+        def send(self, messages, tools):
+            raise RuntimeError("boom")
+
+    storage = _storage(tmp_path)
+    reg = build_registry(["list_files"], confirm_bash=False)
+    harness = Harness(BoomProvider(), reg, storage, max_iterations=5,
+                      provider_name="fake", model="m")
+    with pytest.raises(RuntimeError, match="boom"):
+        harness.run("go")
+    r = storage.list_runs()[0]
+    assert r.outcome == "error"
+    assert "boom" in r.error

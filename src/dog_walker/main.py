@@ -62,7 +62,7 @@ def _parse_limit(rest: list[str], default: int = 20) -> int:
 def render_runs_table(runs: list[RunRecord]) -> str:
     if not runs:
         return "No runs yet."
-    header = f"{'id':>3}  {'when':<19}  {'provider/model':<24}  {'outcome':<14}  {'it':>2}  {'tools':>5}  {'in/out tok':>12}  {'ms':>6}  prompt  tools_used"
+    header = f"{'id':>3}  {'when':<19}  {'provider/model':<24}  {'outcome':<14}  {'it':>2}  {'tools':>5}  {'in/out tok':>12}  {'ms':>6}  {'prompt':<40}  tools_used"
     lines = [header]
     for r in runs:
         pm = f"{r.provider}/{r.model}"[:24]
@@ -76,7 +76,7 @@ def render_runs_table(runs: list[RunRecord]) -> str:
         lines.append(
             f"{r.id if r.id is not None else '-':>3}  {when:<19}  {pm:<24}  "
             f"{r.outcome:<14}  {r.iterations:>2}  {r.tool_calls:>5}  {tok:>12}  "
-            f"{r.latency_ms:>6}  {prompt}  {tools_used}"
+            f"{r.latency_ms:>6}  {prompt:<40}  {tools_used}"
         )
     return "\n".join(lines)
 

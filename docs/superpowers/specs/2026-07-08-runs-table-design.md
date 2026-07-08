@@ -56,10 +56,7 @@ iterations; the loop accumulates metrics across those iterations and writes
 | `latency_ms` | INTEGER | wall-clock of the whole run |
 | `created_at` | TEXT | `DEFAULT CURRENT_TIMESTAMP` |
 
-Token-sum nullability rule: if **no** iteration reported usage, store NULL for
-both token columns (distinguishes "provider gave 0/nothing" from "genuinely
-zero"). If at least one iteration reported usage, store the sum, treating
-missing per-iteration values as 0.
+Token-sum nullability rule: the None-vs-sum decision is made **per field independently**. A field stays NULL until some iteration reports a non-NULL value for that specific field; once a value is reported, subsequent NULL values are treated as 0 when summing. This allows storing NULL for genuinely-unknown counts (more honest than asserting 0).
 
 ## Types (`types.py`)
 

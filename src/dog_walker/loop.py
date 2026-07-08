@@ -89,6 +89,7 @@ class Harness:
         final_answer: str | None = None
         error: str | None = None
 
+        # From here on, every exit path records exactly one run (see the finally block).
         def _add_tokens(usage):
             nonlocal in_tokens, out_tokens
             if usage is None:
@@ -98,6 +99,7 @@ class Harness:
             if usage.output_tokens is not None:
                 out_tokens = (out_tokens or 0) + usage.output_tokens
 
+        # From here on, every exit path records exactly one run (see the finally block).
         try:
             for step in range(1, self.max_iterations + 1):
                 iterations = step

@@ -43,6 +43,33 @@ class Message:
 
 
 @dataclass
+class Usage:
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+
+
+@dataclass
 class Response:
     text: str | None
     tool_calls: list[ToolCall]
+    usage: Usage | None = None
+
+
+@dataclass
+class RunRecord:
+    session_id: str
+    provider: str
+    model: str
+    prompt: str
+    outcome: str
+    iterations: int
+    tool_calls: int
+    tools_used: list[str]
+    latency_ms: int
+    final_answer: str | None = None
+    error: str | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cost_usd: float | None = None
+    id: int | None = None
+    created_at: str | None = None

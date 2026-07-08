@@ -44,7 +44,22 @@ def build_harness(cfg: Config, verbose: bool = False) -> Harness:
                    system_prompt=system_prompt, verbose=verbose)
 
 
-def render_runs_table(runs: list) -> str:
+def _parse_limit(rest: list[str], default: int = 20) -> int:
+    """Parse an optional `--limit N` from CLI args; fall back to default when
+    it's missing, has no value, or isn't a positive integer."""
+    if "--limit" not in rest:
+        return default
+    i = rest.index("--limit")
+    if i + 1 >= len(rest):
+        return default
+    try:
+        value = int(rest[i + 1])
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def render_runs_table(runs: list[RunRecord]) -> str:
     if not runs:
         return "No runs yet."
     header = f"{'id':>3}  {'when':<19}  {'provider/model':<24}  {'outcome':<14}  {'it':>2}  {'tools':>5}  {'in/out tok':>12}  {'ms':>6}  prompt  tools_used"
@@ -71,12 +86,7 @@ def main() -> None:
     args = sys.argv[1:]
 
     if args and args[0] == "runs":
-        limit = 20
-        rest = args[1:]
-        if "--limit" in rest:
-            i = rest.index("--limit")
-            if i + 1 < len(rest):
-                limit = int(rest[i + 1])
+        limit = _parse_limit(args[1:])
         storage = build_storage(cfg)
         print(render_runs_table(storage.list_runs(limit)))
         return

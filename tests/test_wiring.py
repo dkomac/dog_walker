@@ -69,3 +69,26 @@ def test_render_runs_table_shows_fields():
     assert "ollama" in out and "qwen2.5:7b" in out
     assert "hello world" in out
     assert "list_files" in out
+
+
+def test_parse_limit_default_when_absent():
+    from dog_walker.main import _parse_limit
+    assert _parse_limit([]) == 20
+    assert _parse_limit(["--limit"]) == 20           # missing value
+    assert _parse_limit(["--limit", "abc"]) == 20    # non-integer, no crash
+    assert _parse_limit(["--limit", "0"]) == 20      # non-positive
+    assert _parse_limit(["--limit", "-3"]) == 20
+    assert _parse_limit(["--limit", "5"]) == 5
+
+
+def test_render_runs_table_handles_none_tokens():
+    from dog_walker.main import render_runs_table
+    from dog_walker.types import RunRecord
+    rows = [RunRecord(
+        session_id="1", provider="ollama", model="m", prompt="p",
+        outcome="success", iterations=1, tool_calls=0, tools_used=[],
+        latency_ms=3, input_tokens=None, output_tokens=None, id=1,
+        created_at="2026-07-08 10:00:00",
+    )]
+    out = render_runs_table(rows)   # must not raise
+    assert "success" in out

@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from dog_walker.providers.anthropic import (
     to_anthropic_messages, parse_anthropic_response, extract_system)
-from dog_walker.types import Message, ToolCall, ToolResult
+from dog_walker.types import Message, ToolCall, ToolResult, Usage
 
 
 def test_user_message_translation():
@@ -49,3 +49,18 @@ def test_parse_response_with_text_and_tool_use():
     resp = parse_anthropic_response(blocks)
     assert resp.text == "let me check"
     assert resp.tool_calls == [ToolCall(id="t9", name="run_bash", args={"command": "ls"})]
+
+
+def test_parse_attaches_usage():
+    blocks = [SimpleNamespace(type="text", text="done")]
+    usage = Usage(input_tokens=42, output_tokens=7)
+    resp = parse_anthropic_response(blocks, usage)
+    assert resp.text == "done"
+    assert resp.usage.input_tokens == 42
+    assert resp.usage.output_tokens == 7
+
+
+def test_parse_without_usage_is_none():
+    blocks = [SimpleNamespace(type="text", text="done")]
+    resp = parse_anthropic_response(blocks)
+    assert resp.usage is None

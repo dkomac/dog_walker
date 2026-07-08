@@ -1,7 +1,7 @@
 from __future__ import annotations
 from anthropic import Anthropic
 from dog_walker.providers.base import Provider
-from dog_walker.types import Message, ToolSpec, Response, ToolCall
+from dog_walker.types import Message, ToolSpec, Response, ToolCall, Usage
 
 
 def to_anthropic_messages(messages: list[Message]) -> list[dict]:
@@ -35,7 +35,7 @@ def to_anthropic_tools(tools: list[ToolSpec]) -> list[dict]:
              "input_schema": t.parameters} for t in tools]
 
 
-def parse_anthropic_response(content_blocks: list) -> Response:
+def parse_anthropic_response(content_blocks: list, usage: Usage | None = None) -> Response:
     text_parts: list[str] = []
     tool_calls: list[ToolCall] = []
     for block in content_blocks:
@@ -44,7 +44,7 @@ def parse_anthropic_response(content_blocks: list) -> Response:
         elif block.type == "tool_use":
             tool_calls.append(ToolCall(id=block.id, name=block.name, args=dict(block.input)))
     text = "\n".join(text_parts) if text_parts else None
-    return Response(text=text, tool_calls=tool_calls)
+    return Response(text=text, tool_calls=tool_calls, usage=usage)
 
 
 class AnthropicProvider(Provider):
@@ -64,4 +64,10 @@ class AnthropicProvider(Provider):
         if system:
             kwargs["system"] = system
         resp = self.client.messages.create(**kwargs)
-        return parse_anthropic_response(resp.content)
+        usage = None
+        if getattr(resp, "usage", None) is not None:
+            usage = Usage(
+                input_tokens=getattr(resp.usage, "input_tokens", None),
+                output_tokens=getattr(resp.usage, "output_tokens", None),
+            )
+        return parse_anthropic_response(resp.content, usage)

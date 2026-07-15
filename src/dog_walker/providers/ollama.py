@@ -1,7 +1,7 @@
 from __future__ import annotations
 import ollama
 from dog_walker.providers.base import Provider
-from dog_walker.types import Message, ToolSpec, Response, ToolCall
+from dog_walker.types import Message, ToolSpec, Response, ToolCall, Usage
 
 
 def to_ollama_messages(messages: list[Message]) -> list[dict]:
@@ -33,7 +33,7 @@ def to_ollama_tools(tools: list[ToolSpec]) -> list[dict]:
         "parameters": t.parameters}} for t in tools]
 
 
-def parse_ollama_response(message) -> Response:
+def parse_ollama_response(message, usage: Usage | None = None) -> Response:
     text = getattr(message, "content", "") or None
     tool_calls: list[ToolCall] = []
     raw = getattr(message, "tool_calls", None) or []
@@ -41,7 +41,7 @@ def parse_ollama_response(message) -> Response:
         fn = tc.function
         # Ollama does not return a call id; synthesize a stable one by index.
         tool_calls.append(ToolCall(id=f"call_{i}", name=fn.name, args=dict(fn.arguments)))
-    return Response(text=text, tool_calls=tool_calls)
+    return Response(text=text, tool_calls=tool_calls, usage=usage)
 
 
 class OllamaProvider(Provider):
@@ -58,4 +58,9 @@ class OllamaProvider(Provider):
             stream=False,
             options={"temperature": self.temperature},
         )
-        return parse_ollama_response(resp.message)
+        in_tok = getattr(resp, "prompt_eval_count", None)
+        out_tok = getattr(resp, "eval_count", None)
+        usage = None
+        if in_tok is not None or out_tok is not None:
+            usage = Usage(input_tokens=in_tok, output_tokens=out_tok)
+        return parse_ollama_response(resp.message, usage)

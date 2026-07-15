@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from dog_walker.types import Message
+from dog_walker.types import Message, RunRecord
 
 
 class Storage(ABC):
@@ -12,3 +12,9 @@ class Storage(ABC):
 
     @abstractmethod
     def load_messages(self, session_id: str) -> list[Message]: ...
+
+    @abstractmethod
+    def record_run(self, run: RunRecord) -> str: ...
+
+    @abstractmethod
+    def list_runs(self, limit: int = 20) -> list[RunRecord]: ...

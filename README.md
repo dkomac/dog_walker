@@ -42,6 +42,14 @@ dog_walker --verbose "read config.toml and tell me which model is set"
 
 `--verbose` traces each tool call and result live. Conversations persist to `data.db`.
 
+Every run is recorded (model, prompt, tools used, iterations, latency, tokens,
+outcome). List recent runs:
+
+```bash
+dog_walker runs            # last 20 runs
+dog_walker runs --limit 5  # last 5
+```
+
 ## Tests
 
 ```bash

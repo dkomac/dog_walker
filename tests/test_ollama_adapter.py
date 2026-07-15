@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from dog_walker.providers.ollama import to_ollama_messages, to_ollama_tools, parse_ollama_response
-from dog_walker.types import Message, ToolCall, ToolResult, ToolSpec
+from dog_walker.types import Message, ToolCall, ToolResult, ToolSpec, Usage
 
 
 def test_user_message_translation():
@@ -57,3 +57,17 @@ def test_parse_response_no_tool_calls():
     resp = parse_ollama_response(message)
     assert resp.text == "all done"
     assert resp.tool_calls == []
+
+
+def test_parse_attaches_usage():
+    msg = SimpleNamespace(content="done", tool_calls=None)
+    resp = parse_ollama_response(msg, Usage(input_tokens=11, output_tokens=5))
+    assert resp.text == "done"
+    assert resp.usage.input_tokens == 11
+    assert resp.usage.output_tokens == 5
+
+
+def test_parse_without_usage_is_none():
+    msg = SimpleNamespace(content="done", tool_calls=None)
+    resp = parse_ollama_response(msg)
+    assert resp.usage is None

@@ -1,9 +1,10 @@
 from __future__ import annotations
 import sys
+import time
 from dog_walker.providers.base import Provider
 from dog_walker.storage.base import Storage
 from dog_walker.tools.base import ToolRegistry
-from dog_walker.types import Message, ToolResult
+from dog_walker.types import Message, ToolResult, RunRecord
 
 
 def _fmt_args(args: dict) -> str:
@@ -48,12 +49,15 @@ def build_system_prompt(cwd: str, tool_names: list[str], preferences: str = "") 
 class Harness:
     def __init__(self, provider: Provider, registry: ToolRegistry,
                  storage: Storage, max_iterations: int,
+                 provider_name: str = "", model: str = "",
                  system_prompt: str = DEFAULT_SYSTEM_PROMPT,
                  verbose: bool = False):
         self.provider = provider
         self.registry = registry
         self.storage = storage
         self.max_iterations = max_iterations
+        self.provider_name = provider_name
+        self.model = model
         self.system_prompt = system_prompt
         self.verbose = verbose
 
@@ -75,28 +79,78 @@ class Harness:
         messages.append(user_msg)
         self.storage.save_message(session_id, user_msg)
 
-        for step in range(1, self.max_iterations + 1):
-            self._trace(f"\n── iteration {step} ──")
-            response = self.provider.send(messages, self.registry.specs())
+        start = time.monotonic()
+        iterations = 0
+        tool_calls = 0
+        tools_used: list[str] = []
+        in_tokens: int | None = None
+        out_tokens: int | None = None
+        outcome = "max_iterations"
+        final_answer: str | None = None
+        error: str | None = None
 
-            assistant_msg = Message(role="assistant", text=response.text,
-                                    tool_calls=response.tool_calls)
-            messages.append(assistant_msg)
-            self.storage.save_message(session_id, assistant_msg)
+        # From here on, every exit path records exactly one run (see the finally block).
+        def _add_tokens(usage):
+            nonlocal in_tokens, out_tokens
+            if usage is None:
+                return
+            if usage.input_tokens is not None:
+                in_tokens = (in_tokens or 0) + usage.input_tokens
+            if usage.output_tokens is not None:
+                out_tokens = (out_tokens or 0) + usage.output_tokens
 
-            if not response.tool_calls:
-                self._trace("💬 final answer (no tool calls) → stopping")
-                return response.text or ""
+        # From here on, every exit path records exactly one run (see the finally block).
+        try:
+            for step in range(1, self.max_iterations + 1):
+                iterations = step
+                self._trace(f"\n── iteration {step} ──")
+                response = self.provider.send(messages, self.registry.specs())
+                _add_tokens(response.usage)
 
-            results = []
-            for call in response.tool_calls:
-                self._trace(f"→ tool call: {call.name}({_fmt_args(call.args)})")
-                output = self.registry.run(call.name, call.args)
-                self._trace(f"← result: {_truncate(output)}")
-                results.append(ToolResult(tool_call_id=call.id, content=output))
+                assistant_msg = Message(role="assistant", text=response.text,
+                                        tool_calls=response.tool_calls)
+                messages.append(assistant_msg)
+                self.storage.save_message(session_id, assistant_msg)
 
-            tool_msg = Message(role="tool", tool_results=results)
-            messages.append(tool_msg)
-            self.storage.save_message(session_id, tool_msg)
+                if not response.tool_calls:
+                    self._trace("💬 final answer (no tool calls) → stopping")
+                    outcome = "success"
+                    final_answer = response.text or ""
+                    return final_answer
 
-        return f"Stopped: reached max iterations ({self.max_iterations})."
+                results = []
+                for call in response.tool_calls:
+                    tool_calls += 1
+                    if call.name not in tools_used:
+                        tools_used.append(call.name)
+                    self._trace(f"→ tool call: {call.name}({_fmt_args(call.args)})")
+                    output = self.registry.run(call.name, call.args)
+                    self._trace(f"← result: {_truncate(output)}")
+                    results.append(ToolResult(tool_call_id=call.id, content=output))
+
+                tool_msg = Message(role="tool", tool_results=results)
+                messages.append(tool_msg)
+                self.storage.save_message(session_id, tool_msg)
+
+            return f"Stopped: reached max iterations ({self.max_iterations})."
+        except Exception as e:
+            outcome = "error"
+            error = str(e)
+            raise
+        finally:
+            latency_ms = int((time.monotonic() - start) * 1000)
+            self.storage.record_run(RunRecord(
+                session_id=session_id,
+                provider=self.provider_name,
+                model=self.model,
+                prompt=user_input,
+                outcome=outcome,
+                iterations=iterations,
+                tool_calls=tool_calls,
+                tools_used=tools_used,
+                latency_ms=latency_ms,
+                final_answer=final_answer,
+                error=error,
+                input_tokens=in_tokens,
+                output_tokens=out_tokens,
+            ))
